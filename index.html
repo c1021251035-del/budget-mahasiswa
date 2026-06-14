@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steep Budget — 50/30/20</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+Pro:wght@400;600&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    /* ============================================================
+       STEEP DESIGN SYSTEM TOKENS
+       ============================================================ */
+    :root {
+      /* Colors */
+      --color-ink: #17191c;
+      --color-pure-white: #ffffff;
+      --color-fog: #f7f7f8;
+      --color-ash: #4c4c4c;
+      --color-graphite: #777b86;
+      --color-dove: #a3a6af;
+      --color-slate: #8b8c8d;
+      --color-obsidian: #000000;
+      --color-rust: #5d2a1a;
+      --color-apricot-wash: #fbe1d1;
+      --color-sky-wash: #d3e3fc;
+      --color-green: #2d8a4e;
+      --color-red: #c0392b;
+
+      /* Typography */
+      --font-signifier: 'Source Serif Pro', Georgia, 'Times New Roman', serif;
+      --font-sohne: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+      /* Spacing */
+      --spacing-8: 8px;
+      --spacing-12: 12px;
+      --spacing-16: 16px;
+      --spacing-20: 20px;
+      --spacing-24: 24px;
+      --spacing-28: 28px;
+      --spacing-32: 32px;
+      --spacing-40: 40px;
+      --spacing-64: 64px;
+      --spacing-80: 80px;
+
+      /* Radii */
+      --radius-cards: 24px;
+      --radius-inputs: 16px;
+      --radius-pill: 9999px;
+
+      /* Shadows */
+      --shadow-card: rgba(4, 23, 43, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.08) 0px 20px 25px -5px, rgba(0, 0, 0, 0.06) 0px 8px 10px -6px;
+      --shadow-subtle: rgba(4, 23, 43, 0.04) 0px 0px 0px 1px;
+
+      /* Surfaces */
+      --surface-canvas: #ffffff;
+      --surface-fog: #f7f7f8;
+      --surface-card: #ffffff;
+
+      /* Layout */
+      --page-max-width: 1100px;
+    }
+
+    /* ============================================================
+       RESET & BASE
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-sohne);
+      background: var(--color-fog);
+      color: var(--color-ink);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    input, button, select {
+      font-family: inherit;
+      font-size: inherit;
+    }
+
+    /* ============================================================
+       HERO
+       ============================================================ */
+    .hero {
+      background: linear-gradient(180deg, #fff 0%, var(--color-apricot-wash) 30%, var(--color-fog) 100%);
+      padding: var(--spacing-40) 0 var(--spacing-32);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(251,225,209,0.6) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      max-width: var(--page-max-width);
+      margin: 0 auto;
+      padding: 0 var(--spacing-24);
+      position: relative;
+      z-index: 1;
+    }
+    .hero-title {
+      font-family: var(--font-signifier);
+      font-weight: 400;
+      font-size: 44px;
+      line-height: 1.1;
+      letter-spacing: -0.66px;
+      color: var(--color-ink);
+      margin-bottom: var(--spacing-8);
+    }
+    .hero-sub {
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--color-ash);
+      letter-spacing: -0.16px;
+    }
+
+    .hero-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: var(--spacing-8);
+      flex-wrap: wrap;
+      gap: var(--spacing-12);
+    }
+
+    /* Month nav */
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-12);
+    }
+    .month-nav button {
+      background: var(--color-pure-white);
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--color-ink);
+      box-shadow: var(--shadow-subtle);
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .month-nav button:hover {
+      box-shadow: var(--shadow-card);
+    }
+    .month-label {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--color-ink);
+      min-width: 140px;
+      text-align: center;
+      letter-spacing: -0.009em;
+    }
+
+    /* ============================================================
+       MAIN LAYOUT
+       ============================================================ */
+    .main {
+      max-width: var(--page-max-width);
+      margin: 0 auto;
+      padding: 0 var(--spacing-24) var(--spacing-64);
+    }
+
+    /* ============================================================
+       CARD — base
+       ============================================================ */
+    .card {
+      background: var(--surface-card);
+      border-radius: var(--radius-cards);
+      box-shadow: var(--shadow-card);
+      padding: var(--spacing-20);
+    }
+    .card-warm {
+      background: var(--color-apricot-wash);
+    }
+    .card-cool {
+      background: var(--color-sky-wash);
+    }
+
+    /* ============================================================
+       INCOME ROW
+       ============================================================ */
+    .income-section {
+      margin-top: var(--spacing-28);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: var(--spacing-16);
+    }
+    .income-card {
+      grid-column: 1 / 2;
+    }
+    .income-card label {
+      display: block;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-ink);
+      margin-bottom: var(--spacing-8);
+      letter-spacing: -0.009em;
+    }
+    .income-card .input-wrap {
+      position: relative;
+    }
+    .income-card .prefix {
+      position: absolute;
+      left: var(--spacing-16);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-graphite);
+      font-size: 16px;
+      font-weight: 450;
+      pointer-events: none;
+    }
+    .income-card input {
+      width: 100%;
+      padding: var(--spacing-12) var(--spacing-16) var(--spacing-12) 40px;
+      border: 1px solid var(--color-dove);
+      border-radius: var(--radius-inputs);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--color-ink);
+      background: var(--color-pure-white);
+      outline: none;
+      transition: border 0.15s;
+      letter-spacing: -0.009em;
+    }
+    .income-card input:focus {
+      border-color: var(--color-rust);
+      box-shadow: 0 0 0 2px rgba(93,42,26,0.1);
+    }
+
+    /* Stat cards */
+    .stat-card {
+      text-align: center;
+      padding: var(--spacing-16) var(--spacing-20);
+    }
+    .stat-card .stat-label {
+      font-size: 15px;
+      font-weight: 450;
+      color: var(--color-graphite);
+      letter-spacing: -0.009em;
+      margin-bottom: var(--spacing-8);
+    }
+    .stat-card .stat-value {
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--color-ink);
+      letter-spacing: -0.23px;
+      line-height: 1.18;
+      margin-bottom: var(--spacing-4);
+    }
+    .stat-card .stat-sub {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--color-graphite);
+      letter-spacing: -0.13px;
+    }
+    .stat-card .stat-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: var(--spacing-8);
+    }
+    .stat-badge.needs { background: var(--color-apricot-wash); color: var(--color-rust); }
+    .stat-badge.wants { background: var(--color-sky-wash); color: #1a4d8e; }
+    .stat-badge.savings { background: #d4edda; color: var(--color-green); }
+
+    .stat-card.empty .stat-value,
+    .stat-card.empty .stat-sub,
+    .stat-card.empty .stat-badge {
+      opacity: 0.2;
+    }
+
+    /* ============================================================
+       CATEGORY TABS
+       ============================================================ */
+    .category-section {
+      margin-top: var(--spacing-24);
+    }
+    .tabs {
+      display: flex;
+      gap: var(--spacing-8);
+      margin-bottom: var(--spacing-16);
+    }
+    .tab-btn {
+      padding: var(--spacing-8) var(--spacing-20);
+      border: none;
+      border-radius: var(--radius-pill);
+      background: var(--color-pure-white);
+      color: var(--color-graphite);
+      font-size: 15px;
+      font-weight: 450;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: -0.009em;
+      box-shadow: var(--shadow-subtle);
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      color: var(--color-ink);
+    }
+    .tab-btn.active {
+      background: var(--color-ink);
+      color: var(--color-pure-white);
+      box-shadow: none;
+    }
+
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Category items */
+    .cat-item {
+      display: grid;
+      grid-template-columns: 1fr 120px 120px 100px;
+      align-items: center;
+      gap: var(--spacing-12);
+      padding: var(--spacing-12) 0;
+      border-bottom: 1px solid var(--color-fog);
+    }
+    .cat-item:last-child {
+      border-bottom: none;
+    }
+    .cat-item .cat-name {
+      font-size: 15px;
+      font-weight: 450;
+      color: var(--color-ink);
+      letter-spacing: -0.009em;
+    }
+    .cat-item .cat-budget {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--color-graphite);
+      text-align: right;
+      letter-spacing: -0.13px;
+    }
+    .cat-item input {
+      width: 100%;
+      padding: var(--spacing-6) var(--spacing-10);
+      border: 1px solid var(--color-dove);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 450;
+      color: var(--color-ink);
+      background: var(--color-pure-white);
+      text-align: right;
+      outline: none;
+      transition: border 0.15s;
+      min-width: 0;
+    }
+    .cat-item input:focus {
+      border-color: var(--color-rust);
+    }
+    .cat-item .cat-diff {
+      font-size: 14px;
+      font-weight: 500;
+      text-align: right;
+      letter-spacing: -0.13px;
+      white-space: nowrap;
+    }
+    .cat-diff.positive { color: var(--color-green); }
+    .cat-diff.negative { color: var(--color-red); }
+    .cat-diff.neutral { color: var(--color-graphite); }
+
+    .cat-total-row {
+      display: grid;
+      grid-template-columns: 1fr 120px 120px 100px;
+      gap: var(--spacing-12);
+      padding: var(--spacing-12) 0 0;
+      margin-top: var(--spacing-8);
+      border-top: 2px solid var(--color-ink);
+      align-items: center;
+    }
+    .cat-total-row .cat-name {
+      font-weight: 600;
+    }
+    .cat-total-row .cat-budget,
+    .cat-total-row .cat-diff {
+      font-weight: 600;
+    }
+
+    /* ============================================================
+       CHARTS ROW
+       ============================================================ */
+    .charts-row {
+      margin-top: var(--spacing-24);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-16);
+    }
+    .chart-card {
+      padding: var(--spacing-20);
+      min-height: 240px;
+      position: relative;
+    }
+    .chart-card h3 {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--color-ink);
+      letter-spacing: -0.009em;
+      margin-bottom: var(--spacing-16);
+    }
+    .chart-card canvas {
+      width: 100% !important;
+      max-height: 240px;
+    }
+    .chart-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-graphite);
+      font-size: 14px;
+      font-weight: 450;
+      letter-spacing: -0.13px;
+    }
+
+    /* ============================================================
+       EXPORT & HISTORY
+       ============================================================ */
+    .actions-section {
+      margin-top: var(--spacing-24);
+      display: flex;
+      gap: var(--spacing-16);
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-8);
+      padding: var(--spacing-8) var(--spacing-20);
+      background: var(--color-ink);
+      color: var(--color-pure-white);
+      border: none;
+      border-radius: var(--radius-pill);
+      font-size: 15px;
+      font-weight: 450;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: -0.009em;
+    }
+    .btn-primary:hover {
+      background: #2a2e33;
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-8);
+      padding: var(--spacing-8) var(--spacing-20);
+      background: none;
+      color: var(--color-ink);
+      border: 1px solid var(--color-dove);
+      border-radius: var(--radius-pill);
+      font-size: 15px;
+      font-weight: 450;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: -0.009em;
+    }
+    .btn-secondary:hover {
+      border-color: var(--color-graphite);
+    }
+
+    .btn-text {
+      background: none;
+      border: none;
+      color: var(--color-ink);
+      font-size: 15px;
+      font-weight: 450;
+      cursor: pointer;
+      padding: var(--spacing-8);
+      letter-spacing: -0.009em;
+    }
+    .btn-text:hover {
+      color: var(--color-rust);
+    }
+
+    .history-panel {
+      margin-top: var(--spacing-16);
+      display: none;
+    }
+    .history-panel.open {
+      display: block;
+    }
+    .history-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-8);
+    }
+    .history-item {
+      padding: var(--spacing-8) var(--spacing-14);
+      background: var(--color-pure-white);
+      border: 1px solid var(--color-dove);
+      border-radius: var(--radius-pill);
+      font-size: 14px;
+      font-weight: 450;
+      color: var(--color-ink);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: -0.009em;
+    }
+    .history-item:hover {
+      border-color: var(--color-rust);
+      color: var(--color-rust);
+    }
+    .history-item.current {
+      background: var(--color-ink);
+      color: var(--color-pure-white);
+      border-color: var(--color-ink);
+    }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 800px) {
+      .income-section {
+        grid-template-columns: 1fr;
+      }
+      .income-card {
+        grid-column: 1;
+      }
+      .charts-row {
+        grid-template-columns: 1fr;
+      }
+      .cat-item {
+        grid-template-columns: 1fr 90px 90px 80px;
+        gap: var(--spacing-8);
+      }
+      .cat-total-row {
+        grid-template-columns: 1fr 90px 90px 80px;
+        gap: var(--spacing-8);
+      }
+      .hero-title {
+        font-size: 32px;
+        letter-spacing: -0.48px;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .cat-item {
+        grid-template-columns: 1fr 70px 70px 65px;
+        font-size: 13px;
+        gap: var(--spacing-4);
+      }
+      .cat-item input {
+        font-size: 12px;
+        padding: 4px 6px;
+      }
+      .cat-total-row {
+        grid-template-columns: 1fr 70px 70px 65px;
+        gap: var(--spacing-4);
+      }
+      .hero-inner, .main {
+        padding-left: var(--spacing-12);
+        padding-right: var(--spacing-12);
+      }
+    }
+
+    /* ============================================================
+       UTILITIES
+       ============================================================ */
+    .text-rust { color: var(--color-rust); }
+    .text-green { color: var(--color-green); }
+    .text-red { color: var(--color-red); }
+    .text-graphite { color: var(--color-graphite); }
+    .fw-500 { font-weight: 500; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--color-ink);
+      color: var(--color-pure-white);
+      padding: var(--spacing-12) var(--spacing-24);
+      border-radius: var(--radius-pill);
+      font-size: 15px;
+      font-weight: 450;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      z-index: 100;
+      letter-spacing: -0.009em;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== HERO ===== -->
+  <header class="hero">
+    <div class="hero-inner">
+      <h1 class="hero-title">Steep Budget</h1>
+      <div class="hero-row">
+        <p class="hero-sub">50/30/20 — Atur keuangan ala mahasiswa.</p>
+        <div class="month-nav">
+          <button onclick="App.prevMonth()" title="Bulan lalu">←</button>
+          <span class="month-label" id="monthLabel">Juni 2026</span>
+          <button onclick="App.nextMonth()" title="Bulan depan">→</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+
+    <!-- Income + Stats -->
+    <section class="income-section" id="statsSection">
+      <!-- Income card -->
+      <div class="card income-card">
+        <label for="incomeInput">Uang Masuk Saya</label>
+        <div class="input-wrap">
+          <span class="prefix">Rp</span>
+          <input type="text" id="incomeInput" inputmode="numeric" placeholder="0"
+                 onfocus="this.value=this.value.replace(/[^0-9]/g,'')"
+                 oninput="App.onIncomeChange(this.value)"
+                 onblur="this.value=this.value ? parseInt(this.value.replace(/[^0-9]/g,'')||0).toLocaleString('id-ID') : ''"
+                 autocomplete="off" />
+        </div>
+      </div>
+      <!-- Stat cards injected by JS -->
+    </section>
+
+    <!-- Categories -->
+    <section class="category-section">
+      <div class="tabs" id="tabBar"></div>
+      <div class="card" id="tabContent"></div>
+    </section>
+
+    <!-- Charts -->
+    <section class="charts-row">
+      <div class="card-warm chart-card">
+        <h3>Alokasi 50/30/20</h3>
+        <canvas id="donutChart"></canvas>
+      </div>
+      <div class="card-cool chart-card">
+        <h3>Anggaran vs Realisasi</h3>
+        <canvas id="barChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <section class="actions-section">
+      <button class="btn-primary" onclick="App.exportExcel()">
+        ↓ Download Excel
+      </button>
+      <button class="btn-secondary" onclick="App.toggleHistory()">
+        📁 Riwayat Bulan
+      </button>
+      <button class="btn-text" onclick="App.resetMonth()">
+        Reset bulan ini
+      </button>
+    </section>
+
+    <!-- History panel -->
+    <div class="history-panel" id="historyPanel">
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  /* =============================================================
+     APP — 50/30/20 Budget Manager
+     ============================================================= */
+  const App = {
+
+    /* ---- constants ---- */
+    GROUPS: [
+      { id: 'needs',  label: 'Kebutuhan (50%)',  pct: 0.50, badgeClass: 'needs' },
+      { id: 'wants',  label: 'Keinginan (30%)',   pct: 0.30, badgeClass: 'wants' },
+      { id: 'savings',label: 'Tabungan (20%)',    pct: 0.20, badgeClass: 'savings' },
+    ],
+
+    DEFAULT_ITEMS: {
+      needs: [
+        { name: 'Makanan & Minuman' },
+        { name: 'Transportasi' },
+        { name: 'Paket Data & Pulsa' },
+        { name: 'Alat Tulis & Buku' },
+        { name: 'Kesehatan & Skincare' },
+      ],
+      wants: [
+        { name: 'Nongkrong & Hangout' },
+        { name: 'Jajan & Camilan' },
+        { name: 'Hiburan Digital' },
+        { name: 'Belanja & Fashion' },
+        { name: 'Hobi & Kreatif' },
+        { name: 'Kopi & Minuman Kekinian' },
+      ],
+      savings: [
+        { name: 'Dana Darurat' },
+        { name: 'Tabungan Masa Depan' },
+        { name: 'Investasi' },
+        { name: 'Sosial & Amal' },
+      ],
+    },
+
+    /* ---- state ---- */
+    currentKey: null,      // 'YYYY-MM'
+    data: null,            // { income, needs: [], wants: [], savings: [] }
+    charts: { donut: null, bar: null },
+
+    /* ----------------------------------------------------------
+       INIT
+       ---------------------------------------------------------- */
+    init() {
+      const now = new Date();
+      this.currentKey = this._key(now.getFullYear(), now.getMonth());
+      this._ensureData();
+      this.renderAll();
+    },
+
+    _key(year, month) {
+      return `${year}-${String(month + 1).padStart(2, '0')}`;
+    },
+
+    _monthLabel(key) {
+      const [y, m] = key.split('-').map(Number);
+      const months = ['Januari','Februari','Maret','April','Mei','Juni',
+                      'Juli','Agustus','September','Oktober','November','Desember'];
+      return `${months[m - 1]} ${y}`;
+    },
+
+    _parseNum(val) {
+      if (!val) return 0;
+      const clean = String(val).replace(/[^0-9]/g, '');
+      return parseInt(clean, 10) || 0;
+    },
+
+    _fmt(n) {
+      if (n === 0) return 'Rp 0';
+      return 'Rp ' + n.toLocaleString('id-ID');
+    },
+
+    /* ----------------------------------------------------------
+       DATA
+       ---------------------------------------------------------- */
+    _ensureData() {
+      try {
+        const raw = localStorage.getItem('steep-budget-' + this.currentKey);
+        if (raw) {
+          this.data = JSON.parse(raw);
+          // ensure items structure
+          this.GROUPS.forEach(g => {
+            if (!this.data[g.id]) {
+              this.data[g.id] = this.DEFAULT_ITEMS[g.id].map(item => ({
+                name: item.name, actual: 0
+              }));
+            }
+          });
+          return;
+        }
+      } catch (e) {}
+
+      // Default empty data
+      this.data = { income: 0 };
+      this.GROUPS.forEach(g => {
+        this.data[g.id] = this.DEFAULT_ITEMS[g.id].map(item => ({
+          name: item.name, actual: 0
+        }));
+      });
+      this._save();
+    },
+
+    _loadMonth(key) {
+      this.currentKey = key;
+      this._ensureData();
+      this.renderAll();
+    },
+
+    _save() {
+      localStorage.setItem('steep-budget-' + this.currentKey, JSON.stringify(this.data));
+    },
+
+    _getAvailableMonths() {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('steep-budget-')) {
+          keys.push(k.replace('steep-budget-', ''));
+        }
+      }
+      return keys.sort();
+    },
+
+    /* ----------------------------------------------------------
+       INCOME
+       ---------------------------------------------------------- */
+    onIncomeChange(val) {
+      const num = this._parseNum(val);
+      this.data.income = num;
+      this._save();
+      this.renderStats();
+      this.renderCategories();
+      this.renderCharts();
+    },
+
+    /* ----------------------------------------------------------
+       ACTUAL INPUT
+       ---------------------------------------------------------- */
+    onActualChange(groupId, index, val) {
+      const num = this._parseNum(val);
+      if (!this.data[groupId]) return;
+      if (!this.data[groupId][index]) return;
+      this.data[groupId][index].actual = num;
+      this._save();
+      this.renderStats();
+      this.renderCategories();
+      this.renderCharts();
+    },
+
+    /* ----------------------------------------------------------
+       RENDER ALL
+       ---------------------------------------------------------- */
+    renderAll() {
+      // Format income input
+      const input = document.getElementById('incomeInput');
+      input.value = this.data.income ? this.data.income.toLocaleString('id-ID') : '';
+
+      // Month label
+      document.getElementById('monthLabel').textContent = this._monthLabel(this.currentKey);
+
+      this.renderStats();
+      this.renderTabs();
+      this.renderCategories();
+      this.renderCharts();
+      this.renderHistory();
+    },
+
+    /* ---- STATS ---- */
+    renderStats() {
+      const income = this.data.income || 0;
+      const section = document.getElementById('statsSection');
+      // Remove old stat cards (keep first child = income card)
+      while (section.children.length > 1) section.removeChild(section.lastChild);
+
+      this.GROUPS.forEach(g => {
+        const budget = Math.round(income * g.pct);
+        const items = this.data[g.id] || [];
+        const actual = items.reduce((sum, it) => sum + (it.actual || 0), 0);
+        const diff = budget - actual;
+        const pctUsed = budget > 0 ? Math.round((actual / budget) * 100) : 0;
+        const isEmpty = income === 0;
+
+        const div = document.createElement('div');
+        div.className = 'card stat-card' + (isEmpty ? ' empty' : '');
+        div.innerHTML = `
+          <div class="stat-label">${g.label}</div>
+          <div class="stat-value">${income === 0 ? '—' : this._fmt(budget)}</div>
+          <div class="stat-sub">${income === 0 ? 'Belum ada data' : `Terpakai ${this._fmt(actual)} · ${pctUsed}%`}</div>
+          ${income === 0 ? '' : `<span class="stat-badge ${g.badgeClass}">${diff >= 0 ? 'Sisa ' + this._fmt(diff) : 'Lebih ' + this._fmt(Math.abs(diff))}</span>`}
+        `;
+        section.appendChild(div);
+      });
+    },
+
+    /* ---- TABS ---- */
+    currentTab: 'needs',
+
+    renderTabs() {
+      const bar = document.getElementById('tabBar');
+      bar.innerHTML = '';
+      this.GROUPS.forEach(g => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn' + (this.currentTab === g.id ? ' active' : '');
+        btn.textContent = g.label;
+        btn.onclick = () => this.switchTab(g.id);
+        bar.appendChild(btn);
+      });
+    },
+
+    switchTab(id) {
+      this.currentTab = id;
+      this.renderTabs();
+      this.renderCategories();
+    },
+
+    /* ---- CATEGORIES ---- */
+    renderCategories() {
+      const container = document.getElementById('tabContent');
+      const income = this.data.income || 0;
+
+      // Show all tab contents stacked, only active visible via CSS
+      let html = '';
+      this.GROUPS.forEach(g => {
+        const isActive = this.currentTab === g.id;
+        const budgetTotal = Math.round(income * g.pct);
+        const items = this.data[g.id] || [];
+        const actualTotal = items.reduce((sum, it) => sum + (it.actual || 0), 0);
+        const totalDiff = budgetTotal - actualTotal;
+
+        let rows = '';
+        items.forEach((item, idx) => {
+          const itemBudget = Math.round(budgetTotal / items.length); // equal split
+          const diff = itemBudget - (item.actual || 0);
+          const diffClass = diff > 0 ? 'positive' : (diff < 0 ? 'negative' : 'neutral');
+          rows += `
+            <div class="cat-item">
+              <span class="cat-name">${item.name}</span>
+              <span class="cat-budget">${this._fmt(itemBudget)}</span>
+              <input type="text" inputmode="numeric" value="${item.actual ? item.actual.toLocaleString('id-ID') : ''}"
+                     placeholder="0" onfocus="this.value=this.value.replace(/[^0-9]/g,'')"
+                     oninput="App.onActualChange('${g.id}', ${idx}, this.value)"
+                     onblur="this.value=this.value ? parseInt(this.value.replace(/[^0-9]/g,'')).toLocaleString('id-ID') : ''" />
+              <span class="cat-diff ${diffClass}">${diff >= 0 ? this._fmt(diff) : '-' + this._fmt(Math.abs(diff))}</span>
+            </div>
+          `;
+        });
+
+        const totalDiffClass = totalDiff > 0 ? 'positive' : (totalDiff < 0 ? 'negative' : 'neutral');
+
+        html += `
+          <div class="tab-content ${isActive ? 'active' : ''}" data-group="${g.id}">
+            ${rows}
+            <div class="cat-total-row">
+              <span class="cat-name">Total ${g.label}</span>
+              <span class="cat-budget">${this._fmt(budgetTotal)}</span>
+              <span class="cat-budget">${this._fmt(actualTotal)}</span>
+              <span class="cat-diff ${totalDiffClass}">${totalDiff >= 0 ? this._fmt(totalDiff) : '-' + this._fmt(Math.abs(totalDiff))}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    },
+
+    /* ---- CHARTS ---- */
+    renderCharts() {
+      const income = this.data.income || 0;
+
+      // Empty state overlays
+      const donutEl = document.getElementById('donutChart');
+      const barEl = document.getElementById('barChart');
+
+      // Remove existing empty messages
+      document.querySelectorAll('.chart-empty').forEach(el => el.remove());
+
+      if (income === 0) {
+        this._destroyCharts();
+        // Add empty state message
+        const donutMsg = document.createElement('div');
+        donutMsg.className = 'chart-empty';
+        donutMsg.textContent = 'Masukkan uang masuk untuk melihat alokasi.';
+        donutEl.parentElement.style.position = 'relative';
+        donutEl.parentElement.appendChild(donutMsg);
+
+        const barMsg = document.createElement('div');
+        barMsg.className = 'chart-empty';
+        barMsg.textContent = 'Masukkan uang masuk untuk melihat perbandingan.';
+        barEl.parentElement.style.position = 'relative';
+        barEl.parentElement.appendChild(barMsg);
+        return;
+      }
+
+      const budgetNeeds   = Math.round(income * 0.50);
+      const budgetWants   = Math.round(income * 0.30);
+      const budgetSavings= Math.round(income * 0.20);
+
+      const actualNeeds   = (this.data.needs || []).reduce((s, it) => s + (it.actual || 0), 0);
+      const actualWants   = (this.data.wants || []).reduce((s, it) => s + (it.actual || 0), 0);
+      const actualSavings = (this.data.savings || []).reduce((s, it) => s + (it.actual || 0), 0);
+
+      // Hardcoded colors (faster than getComputedStyle)
+      const APRICOT = '#fbe1d1';
+      const SKY = '#d3e3fc';
+      const RUST = '#5d2a1a';
+      const GRAPHITE = '#777b86';
+      const GREEN = '#2d8a4e';
+      const BLUE = '#4a90e2';
+
+      /* Donut — 50/30/20 allocation */
+      const donutCtx = document.getElementById('donutChart');
+      if (this.charts.donut) { this.charts.donut.destroy(); }
+      this.charts.donut = new Chart(donutCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Kebutuhan 50%', 'Keinginan 30%', 'Tabungan 20%'],
+          datasets: [{
+            data: [budgetNeeds, budgetWants, budgetSavings],
+            backgroundColor: [APRICOT, SKY, '#d4edda'],
+            borderColor: [RUST, BLUE, GREEN],
+            borderWidth: 2,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          cutout: '65%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                font: { family: 'Inter, sans-serif', size: 12, weight: '450' },
+                color: '#4c4c4c',
+                padding: 16,
+                usePointStyle: true,
+                pointStyleWidth: 8,
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => ' ' + ctx.label + ': ' + (parseInt(ctx.raw) || 0).toLocaleString('id-ID')
+              }
+            }
+          }
+        }
+      });
+
+      /* Bar — budget vs actual */
+      const barCtx = document.getElementById('barChart');
+      if (this.charts.bar) { this.charts.bar.destroy(); }
+      this.charts.bar = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Kebutuhan', 'Keinginan', 'Tabungan'],
+          datasets: [
+            {
+              label: 'Anggaran',
+              data: [budgetNeeds, budgetWants, budgetSavings],
+              backgroundColor: GRAPHITE,
+              borderRadius: 6,
+              barPercentage: 0.6,
+            },
+            {
+              label: 'Realisasi',
+              data: [actualNeeds, actualWants, actualSavings],
+              backgroundColor: RUST,
+              borderRadius: 6,
+              barPercentage: 0.6,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                font: { family: 'Inter, sans-serif', size: 12, weight: '450' },
+                color: '#4c4c4c',
+                padding: 16,
+                usePointStyle: true,
+                pointStyleWidth: 8,
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => ' ' + ctx.dataset.label + ': Rp ' + (parseInt(ctx.raw) || 0).toLocaleString('id-ID')
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: val => 'Rp' + (val / 1000).toFixed(0) + 'rb'
+              },
+              grid: {
+                color: 'rgba(0,0,0,0.06)'
+              }
+            },
+            x: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    },
+
+    _destroyCharts() {
+      document.querySelectorAll('.chart-empty').forEach(el => el.remove());
+      if (this.charts.donut) { this.charts.donut.destroy(); this.charts.donut = null; }
+      if (this.charts.bar) { this.charts.bar.destroy(); this.charts.bar = null; }
+    },
+
+    /* ----------------------------------------------------------
+       MONTH NAV
+       ---------------------------------------------------------- */
+    prevMonth() {
+      const [y, m] = this.currentKey.split('-').map(Number);
+      const d = new Date(y, m - 2, 1); // go back 1 month
+      this._loadMonth(this._key(d.getFullYear(), d.getMonth()));
+    },
+
+    nextMonth() {
+      const [y, m] = this.currentKey.split('-').map(Number);
+      const now = new Date();
+      const thisKey = this._key(now.getFullYear(), now.getMonth());
+      const d = new Date(y, m, 1); // go forward 1 month
+      const candidate = this._key(d.getFullYear(), d.getMonth());
+      if (candidate > thisKey) return; // don't exceed current month
+      this._loadMonth(candidate);
+    },
+
+    /* ----------------------------------------------------------
+       HISTORY
+       ---------------------------------------------------------- */
+    toggleHistory() {
+      const panel = document.getElementById('historyPanel');
+      panel.classList.toggle('open');
+      this.renderHistory();
+    },
+
+    renderHistory() {
+      const list = document.getElementById('historyList');
+      const months = this._getAvailableMonths();
+
+      if (months.length === 0) {
+        list.innerHTML = '<span style="color:var(--color-graphite);font-size:14px;">Belum ada riwayat bulan lain.</span>';
+        return;
+      }
+
+      list.innerHTML = months.map(key => `
+        <span class="history-item ${key === this.currentKey ? 'current' : ''}"
+              onclick="App._loadMonth('${key}')">
+          ${this._monthLabel(key)}
+        </span>
+      `).join('');
+    },
+
+    /* ----------------------------------------------------------
+       RESET
+       ---------------------------------------------------------- */
+    resetMonth() {
+      if (!confirm('Reset semua data bulan ini?')) return;
+      localStorage.removeItem('steep-budget-' + this.currentKey);
+      this._ensureData();
+      this.renderAll();
+      this._toast('Data bulan ini direset.');
+    },
+
+    /* ----------------------------------------------------------
+       EXPORT EXCEL
+       ==========================================================
+       Creates an aesthetic 3-sheet workbook:
+       Sheet 1: Ringkasan (summary dashboard)
+       Sheet 2: Detail (per-category breakdown)
+       Sheet 3: Riwayat (multi-month trend)
+       ---------------------------------------------------------- */
+    exportExcel() {
+      const income = this.data.income || 0;
+      if (income === 0) {
+        this._toast('Isi penghasilan bulanan dulu.');
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+      const key = this.currentKey;
+      const label = this._monthLabel(key);
+      const [curYear, curMonth] = key.split('-').map(Number);
+
+      /* ---- helper colors ---- */
+      const INK = '17191C';
+      const RUST = '5D2A1A';
+      const FOG = 'F7F7F8';
+      const WHITE = 'FFFFFF';
+      const GRAPHITE = '777B86';
+      const APRICOT = 'FBE1D1';
+      const SKY = 'D3E3FC';
+      const GREEN = '2D8A4E';
+      const RED = 'C0392B';
+      const DOVE = 'A3A6AF';
+
+      function rgb(color) { return { rgb: color }; }
+
+      function headerStyle(bg, fg) {
+        return {
+          font: { name: 'Inter', bold: true, color: rgb(fg || INK), sz: 11 },
+          fill: { fgColor: rgb(bg || INK) },
+          alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+          border: {
+            top:  { style: 'thin', color: rgb(GRAPHITE) },
+            bottom:{ style: 'thin', color: rgb(GRAPHITE) },
+            left: { style: 'thin', color: rgb(GRAPHITE) },
+            right:{ style: 'thin', color: rgb(GRAPHITE) },
+          }
+        };
+      }
+
+      function cellStyle(opts = {}) {
+        return {
+          font: {
+            name: 'Inter',
+            sz: opts.sz || 10,
+            bold: opts.bold || false,
+            color: opts.fg ? rgb(opts.fg) : rgb(INK),
+          },
+          fill: opts.bg ? { fgColor: rgb(opts.bg) } : undefined,
+          alignment: {
+            horizontal: opts.align || 'left',
+            vertical: 'center',
+          },
+          border: {
+            top:  { style: 'thin', color: rgb(DOVE) },
+            bottom:{ style: 'thin', color: rgb(DOVE) },
+            left: { style: 'thin', color: rgb(DOVE) },
+            right:{ style: 'thin', color: rgb(DOVE) },
+          },
+          numFmt: opts.numFmt || undefined,
+        };
+      }
+
+      function money(v) {
+        if (v === undefined || v === null) return 0;
+        return v;
+      }
+
+      /* ============================================================
+         SHEET 1 — RINGKASAN
+         ============================================================ */
+      (function() {
+        const rows = [];
+
+        // Row 1: Title
+        rows.push(['STEEP BUDGET — LAPORAN BULANAN']);
+        // Row 2: Month
+        rows.push([label]);
+        // Row 3: empty
+        rows.push([]);
+
+        // Row 4: Income
+        rows.push(['Penghasilan', '', '', income]);
+        // Row 5: empty
+        rows.push([]);
+
+        // Row 6-8: Allocation headers + data
+        const groups = [
+          { label: 'Kebutuhan (50%)',   id: 'needs',  pct: 0.50 },
+          { label: 'Keinginan (30%)',   id: 'wants',  pct: 0.30 },
+          { label: 'Tabungan (20%)',    id: 'savings', pct: 0.20 },
+        ];
+
+        rows.push(['Kategori', 'Anggaran', 'Realisasi', 'Selisih']);
+        groups.forEach(g => {
+          const budget = Math.round(income * g.pct);
+          const items = (App.data[g.id] || []);
+          const actual = items.reduce((s, it) => s + (it.actual || 0), 0);
+          const diff = budget - actual;
+          rows.push([g.label, budget, actual, diff]);
+        });
+
+        // Total
+        const totalBudget = groups.reduce((s, g) => s + Math.round(income * g.pct), 0);
+        const totalActual = groups.reduce((s, g) => {
+          const items = (App.data[g.id] || []);
+          return s + items.reduce((s2, it) => s2 + (it.actual || 0), 0);
+        }, 0);
+        const totalDiff = totalBudget - totalActual;
+        rows.push([]);
+        rows.push(['TOTAL', totalBudget, totalActual, totalDiff]);
+
+        // Empty row + summary
+        rows.push([]);
+        rows.push(['Ringkasan']);
+        const savingsRate = income > 0 ? Math.round(((App.data.savings || []).reduce((s, it) => s + (it.actual || 0), 0) / income) * 100) : 0;
+        rows.push(['Penghasilan:', income]);
+        rows.push(['Total Pengeluaran:', totalActual]);
+        rows.push(['Sisa:', totalDiff]);
+        rows.push(['Rate Tabungan:', `${savingsRate}%`]);
+
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+
+        // Column widths
+        ws['!cols'] = [
+          { wch: 28 }, { wch: 18 }, { wch: 18 }, { wch: 18 }
+        ];
+
+        // Merge title rows
+        ws['!merges'] = [
+          { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
+          { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },
+        ];
+
+        // Apply styles (cell-by-cell)
+        // Title
+        if (ws['A1']) {
+          ws['A1'].s = { font: { name: 'Source Serif Pro', bold: true, color: rgb(RUST), sz: 16 }, alignment: { horizontal: 'center', vertical: 'center' } };
+        }
+        if (ws['A2']) {
+          ws['A2'].s = { font: { name: 'Inter', bold: true, color: rgb(INK), sz: 13 }, alignment: { horizontal: 'center', vertical: 'center' } };
+        }
+
+        // Income row
+        if (ws['A4']) ws['A4'].s = { font: { name: 'Inter', bold: true, sz: 11, color: rgb(INK) }, alignment: { horizontal: 'left' } };
+        if (ws['D4']) ws['D4'].s = { font: { name: 'Inter', bold: true, sz: 11, color: rgb(INK) }, alignment: { horizontal: 'right' }, numFmt: '#,##0' };
+
+        // Header row (row 6 — 0-indexed row 5)
+        const hdrRow = 5;
+        ['A','B','C','D'].forEach((col, i) => {
+          const cell = ws[col + (hdrRow + 1)];
+          if (cell) cell.s = headerStyle(INK, WHITE);
+        });
+
+        // Data rows
+        groups.forEach((g, gi) => {
+          const r = 6 + gi; // 0-indexed
+          const bg = gi % 2 === 0 ? FOG : WHITE;
+          ['A','B','C','D'].forEach((col, ci) => {
+            const addr = col + (r + 1);
+            const cell = ws[addr];
+            if (!cell) return;
+            cell.s = cellStyle({
+              bg: bg,
+              align: ci === 0 ? 'left' : 'right',
+              fg: INK,
+              sz: 10,
+              numFmt: ci > 0 ? '#,##0' : undefined,
+            });
+          });
+        });
+
+        // Total row
+        const totalRow = 9;
+        ['A','B','C','D'].forEach((col, ci) => {
+          const addr = col + (totalRow + 1);
+          const cell = ws[addr];
+          if (!cell) return;
+          cell.s = {
+            font: { name: 'Inter', bold: true, sz: 11, color: rgb(INK) },
+            fill: { fgColor: rgb(APRICOT) },
+            alignment: { horizontal: ci === 0 ? 'left' : 'right', vertical: 'center' },
+            border: {
+              top: { style: 'medium', color: rgb(INK) },
+              bottom: { style: 'medium', color: rgb(INK) },
+              left: { style: 'thin', color: rgb(DOVE) },
+              right: { style: 'thin', color: rgb(DOVE) },
+            },
+            numFmt: ci > 0 ? '#,##0' : undefined,
+          };
+        });
+
+        // Summary section
+        const summaryStart = 11; // row 12
+        if (ws['A' + (summaryStart + 1)]) {
+          ws['A' + (summaryStart + 1)].s = { font: { name: 'Inter', bold: true, sz: 12, color: rgb(RUST) }, alignment: { horizontal: 'left' } };
+        }
+        for (let i = 0; i < 4; i++) {
+          const r = summaryStart + 1 + i;
+          if (ws['A' + (r + 1)]) {
+            ws['A' + (r + 1)].s = { font: { name: 'Inter', sz: 10, bold: true, color: rgb(INK) }, alignment: { horizontal: 'left' } };
+          }
+          if (ws['B' + (r + 1)]) {
+            ws['B' + (r + 1)].s = {
+              font: { name: 'Inter', sz: 10, bold: i === 3 ? true : false, color: rgb(INK) },
+              alignment: { horizontal: 'right' },
+              numFmt: i < 3 ? '#,##0' : undefined,
+            };
+          }
+        }
+
+        ws['!print'] = { orientation: 'portrait' };
+        XLSX.utils.book_append_sheet(wb, ws, 'Ringkasan');
+      })();
+
+      /* ============================================================
+         SHEET 2 — DETAIL
+         ============================================================ */
+      (function() {
+        const rows = [];
+        rows.push(['STEEP BUDGET — DETAIL PENGELUARAN']);
+        rows.push([label]);
+        rows.push([]);
+
+        const groups = [
+          { label: 'Kebutuhan (50%)', id: 'needs' },
+          { label: 'Keinginan (30%)', id: 'wants' },
+          { label: 'Tabungan (20%)', id: 'savings' },
+        ];
+
+        groups.forEach(g => {
+          const budgetTotal = Math.round((App.data.income || 0) * (g.id === 'needs' ? 0.50 : g.id === 'wants' ? 0.30 : 0.20));
+          const items = App.data[g.id] || [];
+
+          rows.push([g.label, 'Anggaran', 'Realisasi', 'Selisih']);
+          const itemBudget = items.length > 0 ? Math.round(budgetTotal / items.length) : 0;
+
+          items.forEach(item => {
+            const diff = itemBudget - (item.actual || 0);
+            rows.push([item.name, itemBudget, item.actual || 0, diff]);
+          });
+
+          // Subtotal
+          const actualTotal = items.reduce((s, it) => s + (it.actual || 0), 0);
+          const diffTotal = budgetTotal - actualTotal;
+          rows.push(['Subtotal ' + g.label, budgetTotal, actualTotal, diffTotal]);
+          rows.push([]);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = [
+          { wch: 32 }, { wch: 16 }, { wch: 16 }, { wch: 16 }
+        ];
+
+        // Title merge
+        ws['!merges'] = [
+          { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
+          { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },
+        ];
+
+        if (ws['A1']) ws['A1'].s = { font: { name: 'Source Serif Pro', bold: true, color: rgb(RUST), sz: 16 }, alignment: { horizontal: 'center', vertical: 'center' } };
+        if (ws['A2']) ws['A2'].s = { font: { name: 'Inter', bold: true, color: rgb(INK), sz: 13 }, alignment: { horizontal: 'center', vertical: 'center' } };
+
+        let rowIdx = 3; // current 0-indexed row
+
+        groups.forEach((g) => {
+          const items = App.data[g.id] || [];
+          const headerR = rowIdx;
+          // header row
+          ['A','B','C','D'].forEach((col, ci) => {
+            const addr = col + (headerR + 1);
+            const cell = ws[addr];
+            if (cell) cell.s = headerStyle(INK, WHITE);
+          });
+          rowIdx++;
+
+          items.forEach((item, ii) => {
+            const bg = ii % 2 === 0 ? FOG : WHITE;
+            ['A','B','C','D'].forEach((col, ci) => {
+              const addr = col + (rowIdx + 1);
+              const cell = ws[addr];
+              if (!cell) return;
+              cell.s = cellStyle({
+                bg: bg,
+                align: ci === 0 ? 'left' : 'right',
+                sz: 10,
+                numFmt: ci > 0 ? '#,##0' : undefined,
+              });
+            });
+            rowIdx++;
+          });
+
+          // subtotal row
+          ['A','B','C','D'].forEach((col, ci) => {
+            const addr = col + (rowIdx + 1);
+            const cell = ws[addr];
+            if (!cell) return;
+            cell.s = {
+              font: { name: 'Inter', bold: true, sz: 10, color: rgb(INK) },
+              fill: { fgColor: rgb(APRICOT) },
+              alignment: { horizontal: ci === 0 ? 'left' : 'right', vertical: 'center' },
+              border: {
+                top: { style: 'thin', color: rgb(INK) },
+                bottom: { style: 'thin', color: rgb(INK) },
+                left: { style: 'thin', color: rgb(DOVE) },
+                right: { style: 'thin', color: rgb(DOVE) },
+              },
+              numFmt: ci > 0 ? '#,##0' : undefined,
+            };
+          });
+          rowIdx++;
+          rowIdx++; // empty row
+        });
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Detail');
+      })();
+
+      /* ============================================================
+         SHEET 3 — RIWAYAT (trend multi-bulan)
+         ============================================================ */
+      (function() {
+        const rows = [];
+        rows.push(['STEEP BUDGET — RIWAYAT BULANAN']);
+        rows.push([]);
+
+        const months = App._getAvailableMonths();
+        if (months.length === 0) {
+          rows.push(['Belum ada data riwayat.']);
+        } else {
+          rows.push(['Bulan', 'Penghasilan', 'Kebutuhan', 'Keinginan', 'Tabungan', 'Total Realisasi', 'Sisa']);
+          months.forEach(m => {
+            const raw = localStorage.getItem('steep-budget-' + m);
+            if (!raw) return;
+            try {
+              const d = JSON.parse(raw);
+              const inc = d.income || 0;
+              const needs  = (d.needs || []).reduce((s, it) => s + (it.actual || 0), 0);
+              const wants  = (d.wants || []).reduce((s, it) => s + (it.actual || 0), 0);
+              const sav    = (d.savings || []).reduce((s, it) => s + (it.actual || 0), 0);
+              const total  = needs + wants + sav;
+              const sisa   = inc - total;
+              rows.push([App._monthLabel(m), inc, needs, wants, sav, total, sisa]);
+            } catch(e) {}
+          });
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = [
+          { wch: 22 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }
+        ];
+
+        if (ws['A1']) ws['A1'].s = { font: { name: 'Source Serif Pro', bold: true, color: rgb(RUST), sz: 16 }, alignment: { horizontal: 'center', vertical: 'center' } };
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }];
+
+        if (months.length > 0) {
+          const hdrR = 1;
+          ['A','B','C','D','E','F','G'].forEach((col, ci) => {
+            const addr = col + (hdrR + 1);
+            const cell = ws[addr];
+            if (cell) cell.s = headerStyle(INK, WHITE);
+          });
+
+          months.forEach((m, mi) => {
+            const r = 2 + mi;
+            const bg = mi % 2 === 0 ? FOG : WHITE;
+            ['A','B','C','D','E','F','G'].forEach((col, ci) => {
+              const addr = col + (r + 1);
+              const cell = ws[addr];
+              if (!cell) return;
+              cell.s = cellStyle({
+                bg: bg,
+                align: ci === 0 ? 'left' : 'right',
+                sz: 10,
+                numFmt: ci > 0 ? '#,##0' : undefined,
+              });
+            });
+          });
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Riwayat');
+      })();
+
+      /* ---- download ---- */
+      const fileName = `Steep-Budget-${key}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      this._toast(`✅ ${fileName} berhasil di-download!`);
+    },
+
+    /* ----------------------------------------------------------
+       TOAST
+       ---------------------------------------------------------- */
+    _toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(this._toastTimer);
+      this._toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+    },
+  };
+
+  /* ---- boot ---- */
+  document.addEventListener('DOMContentLoaded', () => App.init());
+  </script>
+
+</body>
+</html>
