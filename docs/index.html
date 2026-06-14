@@ -340,26 +340,28 @@
       display: block;
     }
 
-    /* Swiper (mobile only) */
+    /* Swiper (mobile only) — CSS scroll-snap, no JS touch */
     .swiper-container {
       display: none;
-      overflow: hidden;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
       width: 100%;
       position: relative;
-      touch-action: pan-y;
+      scroll-snap-type: x mandatory;
+    }
+    .swiper-container::-webkit-scrollbar {
+      display: none;
     }
     .swiper-track {
       display: flex;
       width: 100%;
-      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-      will-change: transform;
-      scroll-snap-type: x mandatory;
     }
     .swiper-panel {
       min-width: 100%;
       width: 100%;
       flex-shrink: 0;
-      padding: var(--spacing-4) 0;
       background: var(--surface-card);
       overflow: hidden;
       scroll-snap-align: start;
@@ -1049,8 +1051,8 @@
     /* ---- constants ---- */
     GROUPS: [
       { id: 'needs',  label: 'Kebutuhan (50%)',  pct: 0.50, badgeClass: 'needs' },
-      { id: 'wants',  label: 'Keinginan (30%)',   pct: 0.30, badgeClass: 'wants' },
       { id: 'savings',label: 'Tabungan (20%)',    pct: 0.20, badgeClass: 'savings' },
+      { id: 'wants',  label: 'Keinginan (30%)',   pct: 0.30, badgeClass: 'wants' },
     ],
 
     DEFAULT_ITEMS: {
@@ -1321,20 +1323,17 @@
 
     /* ---- SWIPER ---- */
     _swiperIdx: 0,
-    _touchStartX: 0,
-    _touchStartY: 0,
-    _isDragging: false,
 
     _goToSlide(index, animate = true) {
+      const container = document.getElementById('swiperContainer');
       const panels = document.querySelectorAll('.swiper-panel');
-      if (!panels.length) return;
+      if (!panels.length || !container) return;
       if (index < 0) index = 0;
       if (index >= panels.length) index = panels.length - 1;
 
       this._swiperIdx = index;
-      const track = document.getElementById('swiperTrack');
-      track.style.transition = animate ? 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
-      track.style.transform = `translateX(-${index * 100}%)`;
+      container.style.scrollBehavior = animate ? 'smooth' : 'auto';
+      container.scrollLeft = index * container.offsetWidth;
 
       const groupId = panels[index].dataset.group;
       if (this.currentTab !== groupId) {
@@ -1354,63 +1353,32 @@
       const container = document.getElementById('swiperContainer');
       if (!container) return;
 
-      // Touch events
-      container.addEventListener('touchstart', (e) => {
-        this._touchStartX = e.touches[0].clientX;
-        this._touchStartY = e.touches[0].clientY;
-        this._isDragging = false;
-      }, { passive: true });
-
-      container.addEventListener('touchmove', (e) => {
-        if (!this._touchStartX) return;
-        const dx = e.touches[0].clientX - this._touchStartX;
-        const dy = e.touches[0].clientY - this._touchStartY;
-        if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-          this._isDragging = true;
-        }
-        // If dragging horizontally, prevent scroll
-        if (this._isDragging) {
-          const track = document.getElementById('swiperTrack');
-          const panels = document.querySelectorAll('.swiper-panel');
-          const w = container.offsetWidth;
-          const base = -this._swiperIdx * w;
-          const dragOffset = dx;
-          // Clamp to prevent overscroll
-          const max = -(panels.length - 1) * w;
-          const pos = Math.max(max, Math.min(0, base + dragOffset));
-          track.style.transition = 'none';
-          track.style.transform = `translateX(${pos}px)`;
-        }
-      }, { passive: true });
-
-      container.addEventListener('touchend', (e) => {
-        if (!this._touchStartX) return;
-        const dx = e.changedTouches[0].clientX - this._touchStartX;
-        const panels = document.querySelectorAll('.swiper-panel');
-        if (this._isDragging) {
-          const threshold = container.offsetWidth * 0.2;
-          if (dx < -threshold && this._swiperIdx < panels.length - 1) {
-            this._goToSlide(this._swiperIdx + 1);
-          } else if (dx > threshold && this._swiperIdx > 0) {
-            this._goToSlide(this._swiperIdx - 1);
-          } else {
-            this._goToSlide(this._swiperIdx);
+      // Sync dots + tabs on scroll end (native snap)
+      let scrollTimeout;
+      container.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const idx = Math.round(container.scrollLeft / container.offsetWidth);
+          if (idx !== this._swiperIdx) {
+            this._swiperIdx = idx;
+            const panels = container.querySelectorAll('.swiper-panel');
+            const groupId = panels[idx]?.dataset.group;
+            if (groupId && this.currentTab !== groupId) {
+              this.currentTab = groupId;
+              this.renderTabs();
+            }
+            this._updateDots(idx);
           }
-        }
-        this._touchStartX = 0;
-        this._touchStartY = 0;
-        this._isDragging = false;
+        }, 20);
       }, { passive: true });
 
       // Click dots
       document.getElementById('swiperPagination').addEventListener('click', (e) => {
         const dot = e.target.closest('.swipe-dot');
-        if (dot) {
-          this._goToSlide(parseInt(dot.dataset.index));
-        }
+        if (dot) this._goToSlide(parseInt(dot.dataset.index));
       });
 
-      // Re-init on resize
+      // Re-sync on resize
       let resizeTimer;
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
