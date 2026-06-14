@@ -444,6 +444,92 @@
     }
 
     /* ============================================================
+       GOOGLE SHEETS SETTINGS
+       ============================================================ */
+    .sheets-section {
+      margin-top: var(--spacing-24);
+    }
+    .sheets-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-12);
+      cursor: pointer;
+      user-select: none;
+    }
+    .sheets-header h3 {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--color-ink);
+      letter-spacing: -0.009em;
+    }
+    .sheets-toggle {
+      font-size: 14px;
+      color: var(--color-graphite);
+      transition: transform 0.2s;
+    }
+    .sheets-toggle.open { transform: rotate(180deg); }
+    .sheets-body {
+      margin-top: var(--spacing-16);
+      display: none;
+    }
+    .sheets-body.open { display: block; }
+    .sheets-status {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-8);
+      margin-bottom: var(--spacing-16);
+      font-size: 14px;
+      font-weight: 450;
+    }
+    .sheets-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 9999px;
+      background: var(--color-red);
+    }
+    .sheets-dot.connected { background: var(--color-green); }
+    .sheets-dot.pending { background: var(--color-graphite); }
+    .sheets-url-row {
+      display: flex;
+      gap: var(--spacing-8);
+      margin-bottom: var(--spacing-12);
+    }
+    .sheets-url-row input {
+      flex: 1;
+      padding: var(--spacing-10) var(--spacing-14);
+      border: 1px solid var(--color-dove);
+      border-radius: var(--radius-inputs);
+      font-size: 14px;
+      font-weight: 450;
+      color: var(--color-ink);
+      background: var(--color-pure-white);
+      outline: none;
+      letter-spacing: -0.13px;
+    }
+    .sheets-url-row input:focus {
+      border-color: var(--color-rust);
+    }
+    .sheets-actions {
+      display: flex;
+      gap: var(--spacing-8);
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .sheets-note {
+      font-size: 13px;
+      color: var(--color-graphite);
+      margin-top: var(--spacing-12);
+      line-height: 1.5;
+      letter-spacing: -0.13px;
+    }
+    .sheets-note code {
+      background: var(--color-fog);
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    /* ============================================================
        EXPORT & HISTORY
        ============================================================ */
     .actions-section {
@@ -501,7 +587,12 @@
       cursor: pointer;
       padding: var(--spacing-8);
       letter-spacing: -0.009em;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
+    a.btn-text { color: var(--color-rust); }
     .btn-text:hover {
       color: var(--color-rust);
     }
@@ -675,6 +766,34 @@
       </div>
     </section>
 
+    <!-- Google Sheets -->
+    <section class="card sheets-section">
+      <div class="sheets-header" onclick="App.toggleSheets()">
+        <h3>☁ Google Sheets</h3>
+        <span class="sheets-toggle" id="sheetsToggle">▼</span>
+      </div>
+      <div class="sheets-body" id="sheetsBody">
+        <div class="sheets-status">
+          <span class="sheets-dot" id="sheetsDot"></span>
+          <span id="sheetsStatusText">Belum terhubung</span>
+        </div>
+        <div class="sheets-url-row">
+          <input type="text" id="sheetsUrlInput" placeholder="https://script.google.com/macros/s/..." />
+          <button class="btn-secondary" onclick="App.saveSheetsUrl()">Simpan</button>
+        </div>
+        <div class="sheets-actions">
+          <button class="btn-primary" onclick="App.syncToSheets()">↻ Sync ke Google Sheets</button>
+          <a href="#" id="sheetsOpenLink" target="_blank" style="display:none;" class="btn-text">Buka di Sheets →</a>
+        </div>
+        <div class="sheets-note">
+          Butuh bantuan? Baca <code>apps-script.gs</code> atau deploy sendiri:<br/>
+          1. Buka <strong>sheets.new</strong> → Extensions &gt; Apps Script<br/>
+          2. Paste kode dari <code>apps-script.gs</code> → Deploy &gt; Web app<br/>
+          3. Copy URL → tempel di atas
+        </div>
+      </div>
+    </section>
+
     <!-- Actions -->
     <section class="actions-section">
       <button class="btn-primary" onclick="App.exportExcel()">
@@ -748,6 +867,7 @@
       this.currentKey = this._key(now.getFullYear(), now.getMonth());
       this._ensureData();
       this.renderAll();
+      this._updateSheetsStatus();
     },
 
     _key(year, month) {
@@ -1576,6 +1696,136 @@
       el.classList.add('show');
       clearTimeout(this._toastTimer);
       this._toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+    },
+
+    /* ----------------------------------------------------------
+       GOOGLE SHEETS
+       ---------------------------------------------------------- */
+    _getSheetsUrl() {
+      return localStorage.getItem('steep-sheets-url') || '';
+    },
+
+    _saveSheetsUrl(url) {
+      if (!url) {
+        url = document.getElementById('sheetsUrlInput').value.trim();
+      }
+      localStorage.setItem('steep-sheets-url', url);
+      this._updateSheetsStatus();
+      this._toast(url ? 'URL Google Sheets disimpan.' : 'URL dihapus.');
+    },
+
+    saveSheetsUrl() {
+      this._saveSheetsUrl();
+    },
+
+    _updateSheetsStatus() {
+      const url = this._getSheetsUrl();
+      const dot = document.getElementById('sheetsDot');
+      const text = document.getElementById('sheetsStatusText');
+      const link = document.getElementById('sheetsOpenLink');
+      const input = document.getElementById('sheetsUrlInput');
+
+      input.value = url;
+
+      if (!url) {
+        dot.className = 'sheets-dot';
+        text.textContent = 'Belum terhubung';
+        link.style.display = 'none';
+      } else {
+        dot.className = 'sheets-dot connected';
+        text.textContent = 'Terhubung';
+        link.href = url;
+        link.style.display = 'inline-flex';
+      }
+    },
+
+    toggleSheets() {
+      const body = document.getElementById('sheetsBody');
+      const toggle = document.getElementById('sheetsToggle');
+      body.classList.toggle('open');
+      toggle.classList.toggle('open');
+    },
+
+    async syncToSheets() {
+      const url = this._getSheetsUrl();
+      if (!url) {
+        this._toast('Tempel URL Google Apps Script dulu.');
+        document.getElementById('sheetsBody').classList.add('open');
+        return;
+      }
+      const income = this.data.income || 0;
+      if (income === 0) {
+        this._toast('Isi uang masuk dulu.');
+        return;
+      }
+
+      const dot = document.getElementById('sheetsDot');
+      dot.className = 'sheets-dot pending';
+      document.getElementById('sheetsStatusText').textContent = 'Syncing...';
+
+      // Build payload matching apps-script.gs expectations
+      const groups = this.GROUPS.map(g => ({
+        id: g.id,
+        label: g.label,
+        budget: Math.round(income * g.pct),
+        actual: (this.data[g.id] || []).reduce((s, it) => s + (it.actual || 0), 0),
+        items: (this.data[g.id] || []).map(item => {
+          const group = this.GROUPS.find(gr => gr.id === g.id);
+          const groupBudget = Math.round(income * (group ? group.pct : 0));
+          const items = this.data[g.id] || [];
+          const itemBudget = items.length > 0 ? Math.round(groupBudget / items.length) : 0;
+          return {
+            name: item.name,
+            budget: itemBudget,
+            actual: item.actual || 0,
+          };
+        }),
+      }));
+
+      // Build history from localStorage
+      const history = this._getAvailableMonths().map(key => {
+        const raw = localStorage.getItem('steep-budget-' + key);
+        if (!raw) return null;
+        try {
+          const d = JSON.parse(raw);
+          const inc = d.income || 0;
+          const needs  = (d.needs || []).reduce((s, it) => s + (it.actual || 0), 0);
+          const wants  = (d.wants || []).reduce((s, it) => s + (it.actual || 0), 0);
+          const savings= (d.savings || []).reduce((s, it) => s + (it.actual || 0), 0);
+          return {
+            month: this._monthLabel(key),
+            income: inc,
+            needs, wants, savings,
+            total: needs + wants + savings,
+            sisa: inc - (needs + wants + savings),
+          };
+        } catch (e) { return null; }
+      }).filter(Boolean).sort();
+
+      const payload = JSON.stringify({
+        month: this._monthLabel(this.currentKey),
+        income,
+        groups,
+        history,
+      });
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: payload,
+        });
+
+        // no-crs → opaque res, can't read body. assume success.
+        dot.className = 'sheets-dot connected';
+        document.getElementById('sheetsStatusText').textContent = 'Synced!';
+        this._toast('✅ Synced ke Google Sheets!');
+      } catch (err) {
+        dot.className = 'sheets-dot';
+        document.getElementById('sheetsStatusText').textContent = 'Gagal';
+        this._toast('❌ Gagal sync: ' + err.message);
+      }
     },
   };
 
