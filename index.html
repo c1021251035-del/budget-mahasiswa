@@ -340,6 +340,49 @@
       display: block;
     }
 
+    /* Swiper (mobile only) */
+    .swiper-container {
+      display: none;
+      overflow: hidden;
+      width: 100%;
+      position: relative;
+    }
+    .swiper-track {
+      display: flex;
+      width: 100%;
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      will-change: transform;
+    }
+    .swiper-panel {
+      min-width: 100%;
+      width: 100%;
+      flex-shrink: 0;
+      padding: var(--spacing-4) 0;
+    }
+    .swiper-pagination {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: var(--spacing-6);
+      padding-top: var(--spacing-10);
+    }
+    .swipe-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-dove);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .swipe-dot.active {
+      background: var(--color-ink);
+      width: 20px;
+      border-radius: 3px;
+    }
+    .swipe-dot:hover {
+      background: var(--color-graphite);
+    }
+
     /* Category items */
     .cat-item {
       display: grid;
@@ -776,6 +819,19 @@
         align-items: center;
         display: flex;
       }
+      /* Activate swiper on mobile */
+      .swiper-container {
+        display: block;
+      }
+      .swiper-pagination {
+        display: flex;
+      }
+      .tab-content-card > .tab-content {
+        display: none !important;
+      }
+      .tab-content-card > .tab-content.active {
+        display: none !important;
+      }
     }
 
     /* ---- Mobile S / iPhone SE (320px) ---- */
@@ -908,7 +964,12 @@
     <!-- Categories -->
     <section class="category-section">
       <div class="tabs" id="tabBar"></div>
-      <div class="card" id="tabContent"></div>
+      <div class="card tab-content-card" id="tabContent">
+        <div class="swiper-container" id="swiperContainer">
+          <div class="swiper-track" id="swiperTrack"></div>
+        </div>
+        <div class="swiper-pagination" id="swiperPagination"></div>
+      </div>
     </section>
 
     <!-- Charts -->
@@ -1025,6 +1086,7 @@
       this._ensureData();
       this.renderAll();
       this._updateSheetsStatus();
+      this._initSwiper();
     },
 
     _key(year, month) {
@@ -1189,18 +1251,22 @@
     switchTab(id) {
       this.currentTab = id;
       this.renderTabs();
-      this.renderCategories();
+      // Animate swiper if on mobile
+      const idx = this.GROUPS.findIndex(g => g.id === id);
+      this._goToSlide(idx);
     },
 
     /* ---- CATEGORIES ---- */
     renderCategories() {
-      const container = document.getElementById('tabContent');
       const income = this.data.income || 0;
 
-      // Show all tab contents stacked, only active visible via CSS
-      let html = '';
-      this.GROUPS.forEach(g => {
-        const isActive = this.currentTab === g.id;
+      // Build swiper panels inside swiper-track
+      const track = document.getElementById('swiperTrack');
+      const pagination = document.getElementById('swiperPagination');
+      let panelsHtml = '';
+      let dotsHtml = '';
+
+      this.GROUPS.forEach((g, gi) => {
         const budgetTotal = Math.round(income * g.pct);
         const items = this.data[g.id] || [];
         const actualTotal = items.reduce((sum, it) => sum + (it.actual || 0), 0);
@@ -1226,8 +1292,8 @@
 
         const totalDiffClass = totalDiff > 0 ? 'positive' : (totalDiff < 0 ? 'negative' : 'neutral');
 
-        html += `
-          <div class="tab-content ${isActive ? 'active' : ''}" data-group="${g.id}">
+        panelsHtml += `
+          <div class="swiper-panel" data-group="${g.id}">
             ${rows}
             <div class="cat-total-row">
               <span class="cat-name">Total ${g.label}</span>
@@ -1237,9 +1303,114 @@
             </div>
           </div>
         `;
+
+        dotsHtml += `<span class="swipe-dot${gi === this._swiperIdx ? ' active' : ''}" data-index="${gi}"></span>`;
       });
 
-      container.innerHTML = html;
+      track.innerHTML = panelsHtml;
+      pagination.innerHTML = dotsHtml;
+
+      // Set initial position
+      this._goToSlide(this._swiperIdx || 0, false);
+    },
+
+    /* ---- SWIPER ---- */
+    _swiperIdx: 0,
+    _touchStartX: 0,
+    _touchStartY: 0,
+    _isDragging: false,
+
+    _goToSlide(index, animate = true) {
+      const panels = document.querySelectorAll('.swiper-panel');
+      if (!panels.length) return;
+      if (index < 0) index = 0;
+      if (index >= panels.length) index = panels.length - 1;
+
+      this._swiperIdx = index;
+      const track = document.getElementById('swiperTrack');
+      track.style.transition = animate ? 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
+      track.style.transform = `translateX(-${index * 100}%)`;
+
+      const groupId = panels[index].dataset.group;
+      if (this.currentTab !== groupId) {
+        this.currentTab = groupId;
+        this.renderTabs();
+      }
+      this._updateDots(index);
+    },
+
+    _updateDots(index) {
+      document.querySelectorAll('.swipe-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+      });
+    },
+
+    _initSwiper() {
+      const container = document.getElementById('swiperContainer');
+      if (!container) return;
+
+      // Touch events
+      container.addEventListener('touchstart', (e) => {
+        this._touchStartX = e.touches[0].clientX;
+        this._touchStartY = e.touches[0].clientY;
+        this._isDragging = false;
+      }, { passive: true });
+
+      container.addEventListener('touchmove', (e) => {
+        if (!this._touchStartX) return;
+        const dx = e.touches[0].clientX - this._touchStartX;
+        const dy = e.touches[0].clientY - this._touchStartY;
+        if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          this._isDragging = true;
+        }
+        // If dragging horizontally, prevent scroll
+        if (this._isDragging) {
+          const track = document.getElementById('swiperTrack');
+          const panels = document.querySelectorAll('.swiper-panel');
+          const w = container.offsetWidth;
+          const base = -this._swiperIdx * w;
+          const dragOffset = dx;
+          // Clamp to prevent overscroll
+          const max = -(panels.length - 1) * w;
+          const pos = Math.max(max, Math.min(0, base + dragOffset));
+          track.style.transition = 'none';
+          track.style.transform = `translateX(${pos}px)`;
+        }
+      }, { passive: true });
+
+      container.addEventListener('touchend', (e) => {
+        if (!this._touchStartX) return;
+        const dx = e.changedTouches[0].clientX - this._touchStartX;
+        const panels = document.querySelectorAll('.swiper-panel');
+        if (this._isDragging) {
+          const threshold = container.offsetWidth * 0.2;
+          if (dx < -threshold && this._swiperIdx < panels.length - 1) {
+            this._goToSlide(this._swiperIdx + 1);
+          } else if (dx > threshold && this._swiperIdx > 0) {
+            this._goToSlide(this._swiperIdx - 1);
+          } else {
+            this._goToSlide(this._swiperIdx);
+          }
+        }
+        this._touchStartX = 0;
+        this._touchStartY = 0;
+        this._isDragging = false;
+      }, { passive: true });
+
+      // Click dots
+      document.getElementById('swiperPagination').addEventListener('click', (e) => {
+        const dot = e.target.closest('.swipe-dot');
+        if (dot) {
+          this._goToSlide(parseInt(dot.dataset.index));
+        }
+      });
+
+      // Re-init on resize
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => this._goToSlide(this._swiperIdx, false), 100);
+      }, { passive: true });
     },
 
     /* ---- CHARTS ---- */
