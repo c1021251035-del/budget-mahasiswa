@@ -1233,7 +1233,7 @@
         div.innerHTML = `
           <div class="stat-label">${g.label}</div>
           <div class="stat-value">${income === 0 ? '—' : this._fmt(budget)}</div>
-          <div class="stat-sub">${income === 0 ? 'Belum ada data' : `Terpakai ${this._fmt(actual)} · ${pctUsed}%`}</div>
+          <div class="stat-sub">${income === 0 ? 'Belum ada data' : `${this._fmt(actual)} · ${pctUsed}%`}</div>
           ${income === 0 ? '' : `<span class="stat-badge ${g.badgeClass}">${diff >= 0 ? 'Sisa ' + this._fmt(diff) : 'Lebih ' + this._fmt(Math.abs(diff))}</span>`}
         `;
         section.appendChild(div);
