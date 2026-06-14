@@ -38,7 +38,9 @@
 
       /* Spacing */
       --spacing-8: 8px;
+      --spacing-10: 10px;
       --spacing-12: 12px;
+      --spacing-14: 14px;
       --spacing-16: 16px;
       --spacing-20: 20px;
       --spacing-24: 24px;
@@ -634,6 +636,23 @@
     /* ============================================================
        RESPONSIVE
        ============================================================ */
+
+    /* ---- Tablet landscape / iPad Pro 11" ---- */
+    @media (max-width: 1024px) {
+      .main {
+        padding-left: var(--spacing-20);
+        padding-right: var(--spacing-20);
+      }
+      .hero-inner {
+        padding-left: var(--spacing-20);
+        padding-right: var(--spacing-20);
+      }
+      .charts-row {
+        gap: var(--spacing-16);
+      }
+    }
+
+    /* ---- Tablet portrait / iPad Mini / Surface Pro ---- */
     @media (max-width: 800px) {
       .income-section {
         grid-template-columns: 1fr;
@@ -656,25 +675,148 @@
         font-size: 32px;
         letter-spacing: -0.48px;
       }
+      .hero-subtitle {
+        font-size: 15px;
+      }
+      .month-nav {
+        gap: var(--spacing-8);
+      }
+      .month-nav span {
+        font-size: 15px;
+      }
+      .sheets-section {
+        margin-top: var(--spacing-16);
+      }
+      .actions-section {
+        margin-top: var(--spacing-16);
+      }
     }
 
-    @media (max-width: 500px) {
+    /* ---- Phone landscape / Small tablet ---- */
+    @media (max-width: 640px) {
+      :root {
+        --spacing-24: 20px;
+        --spacing-20: 16px;
+      }
+      .main {
+        padding-left: var(--spacing-16);
+        padding-right: var(--spacing-16);
+      }
+      .hero {
+        padding: var(--spacing-28) 0 var(--spacing-24);
+      }
+      .hero-inner {
+        padding-left: var(--spacing-16);
+        padding-right: var(--spacing-16);
+      }
+      .hero-title {
+        font-size: 26px;
+        letter-spacing: -0.32px;
+      }
+      .hero-subtitle {
+        font-size: 14px;
+        margin-top: var(--spacing-8);
+      }
+      .stat-card {
+        padding: var(--spacing-14) var(--spacing-16);
+      }
       .cat-item {
-        grid-template-columns: 1fr 70px 70px 65px;
+        grid-template-columns: 1fr 80px 80px 72px;
         font-size: 13px;
+        padding: var(--spacing-8) 0;
+      }
+      .cat-item input {
+        font-size: 13px;
+        padding: 6px 8px;
+      }
+      .cat-total-row {
+        grid-template-columns: 1fr 80px 80px 72px;
+      }
+      .tabs {
         gap: var(--spacing-4);
+      }
+      .tab-btn {
+        padding: var(--spacing-8) var(--spacing-12);
+        font-size: 13px;
+      }
+      .chart-card {
+        min-height: 220px;
+      }
+      .sheets-url-row {
+        flex-direction: column;
+      }
+      .sheets-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .sheets-actions button {
+        width: 100%;
+        justify-content: center;
+      }
+      .actions-section {
+        flex-direction: column;
+        gap: var(--spacing-8);
+      }
+      .btn-primary, .btn-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    /* ---- Mobile S / iPhone SE (320px) ---- */
+    @media (max-width: 380px) {
+      :root {
+        --spacing-24: 16px;
+        --spacing-16: 12px;
+        --radius-cards: 16px;
+        --radius-inputs: 12px;
+      }
+      .main {
+        padding-left: var(--spacing-12);
+        padding-right: var(--spacing-12);
+      }
+      .hero {
+        padding: var(--spacing-20) 0 var(--spacing-20);
+      }
+      .hero-inner {
+        padding-left: var(--spacing-12);
+        padding-right: var(--spacing-12);
+      }
+      .hero-title {
+        font-size: 22px;
+        letter-spacing: -0.24px;
+      }
+      .hero-subtitle {
+        font-size: 13px;
+      }
+      .month-nav {
+        padding: var(--spacing-8) var(--spacing-12);
+        border-radius: var(--radius-pill);
+      }
+      .month-nav span {
+        font-size: 14px;
+      }
+      .stat-card {
+        padding: var(--spacing-12) var(--spacing-14);
+      }
+      .cat-item {
+        grid-template-columns: 1fr 65px 65px 60px;
+        font-size: 12px;
+        padding: var(--spacing-6) 0;
       }
       .cat-item input {
         font-size: 12px;
-        padding: 4px 6px;
+        padding: 5px 6px;
       }
       .cat-total-row {
-        grid-template-columns: 1fr 70px 70px 65px;
-        gap: var(--spacing-4);
+        grid-template-columns: 1fr 65px 65px 60px;
       }
-      .hero-inner, .main {
-        padding-left: var(--spacing-12);
-        padding-right: var(--spacing-12);
+      .chart-card {
+        min-height: 200px;
+        padding: var(--spacing-14);
+      }
+      .sheets-note {
+        font-size: 12px;
       }
     }
 
